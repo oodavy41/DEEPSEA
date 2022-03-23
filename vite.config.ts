@@ -7,6 +7,7 @@ import vitePluginImp from "vite-plugin-imp";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/RLYEH/",
   resolve: {
     alias: [
       { find: "@Rlyeh", replacement: path.resolve(__dirname, "src/Rlyeh") },
@@ -33,6 +34,7 @@ export default defineConfig({
   ],
   build: {
     outDir: "docs",
+    assetsDir: ".",
     rollupOptions: {
       external: [],
     },
