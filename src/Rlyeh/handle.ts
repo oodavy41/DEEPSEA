@@ -1,4 +1,4 @@
-import {Scenes} from './Scenes';
+import { Scenes } from "./Scenes";
 
 export class KeyBoardCtrl {
   scene: Scenes;
@@ -9,15 +9,15 @@ export class KeyBoardCtrl {
   constructor(scene: Scenes) {
     this.scene = scene;
     this.mouseCtrlFlag = false;
-    this.mousePos = [null, null];
+    this.mousePos = [0, 0];
     this.movement = [false, false, false, false];
   }
 
   canv_on_click() {
     this.mouseCtrlFlag = !this.mouseCtrlFlag;
-    this.mousePos[0] = null;
-    this.mousePos[1] = null;
-    console.log('canvas click', this.mouseCtrlFlag);
+    this.mousePos[0] = 0;
+    this.mousePos[1] = 0;
+    console.log("canvas click", this.mouseCtrlFlag);
   }
 
   on_mouse_move(event: MouseEvent) {
@@ -73,22 +73,22 @@ export class KeyBoardCtrl {
   moveCtrl() {
     this.scene.mainCamera.movectrl(this.movement);
   }
-  LDchangex(event) {
-    document.getElementById('LDxL').innerText = event.value;
-    this.scene.lights['Main'].lightDirection[0] = event.value;
-  }
-  LDchangey(event) {
-    document.getElementById('LDyL').innerText = event.value;
-    this.scene.lights['Main'].lightDirection[1] = event.value;
-  }
-  LDchangez(event) {
-    document.getElementById('LDzL').innerText = event.value;
-    this.scene.lights['Main'].lightDirection[2] = event.value;
-  }
-  mlchange(event) {
-    document.getElementById('mtls').innerText = event.value;
-  }
-  snchange(event) {
-    document.getElementById('stns').innerText = event.value;
-  }
+  // LDchangex(event) {
+  //   document.getElementById("LDxL").innerText = event.value;
+  //   this.scene.lights["Main"].lightDirection[0] = event.value;
+  // }
+  // LDchangey(event) {
+  //   document.getElementById("LDyL").innerText = event.value;
+  //   this.scene.lights["Main"].lightDirection[1] = event.value;
+  // }
+  // LDchangez(event) {
+  //   document.getElementById("LDzL").innerText = event.value;
+  //   this.scene.lights["Main"].lightDirection[2] = event.value;
+  // }
+  // mlchange(event) {
+  //   document.getElementById("mtls").innerText = event.value;
+  // }
+  // snchange(event) {
+  //   document.getElementById("stns").innerText = event.value;
+  // }
 }

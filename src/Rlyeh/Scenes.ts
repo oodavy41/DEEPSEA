@@ -11,12 +11,14 @@ import { ResManager } from "./ResManager";
 
 export class Scenes {
   SELF: Scenes;
-  GL: WebGLRenderingContext;
-  update: (context) => void;
+  requestFramer: number;
+  GL: WebGLRenderingContext | undefined;
+  framectx: CanvasRenderingContext2D | undefined;
+  update: (context: Scenes) => void = (c) => {};
   mainCamera: Camera;
   cameras: { [key: string]: Camera };
   lights: { [key: string]: Light }; // todo: lights feature
-  skybox: Transform;
+  skybox: Transform | undefined;
   resManager: ResManager;
   mtllib: { [key: string]: AMaterial };
   Time: number;
@@ -34,6 +36,7 @@ export class Scenes {
 
   constructor(canvas: HTMLCanvasElement, resMgr: ResManager) {
     this.SELF = this;
+    this.requestFramer = 0;
     this.state = 0;
     this.initFuns = [];
     this.updtFuns = [];
@@ -67,7 +70,7 @@ export class Scenes {
     this.OBJs.push(obj);
   }
 
-  EnableShadow(width, height) {
+  EnableShadow(width: number, height: number) {
     this.lights["Main"].enableShadow(this, width, height);
     this._shadow = true;
   }
@@ -83,6 +86,11 @@ export class Scenes {
     } else {
       console.warn("no any OBJS be loaded");
     }
+  }
+
+  End() {
+    cancelAnimationFrame(this.requestFramer);
+    this.GL?.getExtension("WEBGL_lose_context")?.loseContext();
   }
 
   private _Init() {
@@ -102,21 +110,25 @@ export class Scenes {
   private _update() {
     this.deltaTime = Date.now() - this.Time;
     this.Time = Date.now();
-    this.update(this);
+    this.update?.(this);
     // ===========================render cycle
 
-    glclear(this.GL);
+    this.GL && glclear(this.GL);
 
     if (this.shadow) {
       let light = this.lights["Main"];
-      this.GL.bindFramebuffer(this.GL.FRAMEBUFFER, light.depthFrame.frameBuffer);
-      this.GL.clear(this.GL.COLOR_BUFFER_BIT | this.GL.DEPTH_BUFFER_BIT);
+      this.GL?.bindFramebuffer(
+        this.GL?.FRAMEBUFFER,
+        light.depthFrame.frameBuffer
+      );
+      this.GL?.viewport(0, 0, light.depthFrame.width, light.depthFrame.height);
+      this.GL?.clear(this.GL?.COLOR_BUFFER_BIT | this.GL.DEPTH_BUFFER_BIT);
 
       for (let i = 0, l = this.OBJs.length; i < l; i++) {
         this.OBJs[i].draw(this, true);
       }
 
-      this.GL.readPixels(
+      this.GL?.readPixels(
         0,
         0,
         light.depthFrame.width,
@@ -126,14 +138,14 @@ export class Scenes {
         light.depthFrame.textData
       );
 
-      this.GL.bindFramebuffer(this.GL.FRAMEBUFFER, null);
+      this.GL?.bindFramebuffer(this.GL.FRAMEBUFFER, null);
+      this.GL?.viewport(0, 0, this.glc.width, this.glc.height);
     }
 
     for (let i = 0, l = this.OBJs.length; i < l; i++) {
       this.OBJs[i].draw(this);
     }
-    this.GL.flush();
-
-    requestAnimationFrame(() => this._update());
+    this.GL?.flush();
+    this.requestFramer = requestAnimationFrame(() => this._update());
   }
 }

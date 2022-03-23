@@ -1,6 +1,6 @@
 import { att_c, att_n, att_p } from "./GLOBAL/GLOBAL";
 import { AMaterial, MTL_TYPE } from "./object/Material";
-import { BasePhoneMat } from "./object/materials/BasePhoneMat";
+import { BasePhoneMat } from "./object/materials/basePhoneMat";
 import { BasePhoneShadowMat } from "./object/materials/basePhoneShadowMat";
 import { SkyBoxMat } from "./object/materials/SkyBoxMat";
 import { Mesh } from "./object/Mesh";
@@ -51,17 +51,19 @@ export function donghnut(
   const mesh = new Mesh();
   mesh.set_mesh([[att_p, pos, 3], [att_c, col, 4], [att_n, nor, 3], idx]);
 
-  const mat = shadowFlag ? new BasePhoneShadowMat(gl, resManager) : new BasePhoneMat(gl, resManager);
+  const mat = shadowFlag
+    ? new BasePhoneShadowMat(gl, resManager)
+    : new BasePhoneMat(gl, resManager);
   mesh.set_mat(mat);
   ret.add_mesh(mesh);
   return new RObject({
-    donghnut: ret
+    donghnut: ret,
   });
 }
 
-export function hsva(h: number, s: number, v: number, a: number) {
+export function hsva(h: number, s: number, v: number, a: number): number[] {
   if (s > 1 || v > 1 || a > 1) {
-    return;
+    return [];
   }
   const th = h % 360;
   const i = Math.floor(th / 60);
@@ -81,13 +83,13 @@ export function hsva(h: number, s: number, v: number, a: number) {
   return color;
 }
 
-export function cube(side) {
+export function cube(side: number) {
   const s = (side || 1) / 2;
-  const coords = [];
-  const normals = [];
-  const texCoords = [];
-  const indices = [];
-  function face(xyz, nrm) {
+  const coords = Array<number>();
+  const normals = Array<number>();
+  const texCoords = Array<number>();
+  const indices = Array<number>();
+  function face(xyz: number[], nrm: number[]) {
     const start = coords.length / 3;
     let i;
     for (i = 0; i < 12; i++) {
@@ -109,7 +111,11 @@ export function cube(side) {
   return [coords, texCoords, normals, indices];
 }
 
-export function skybox(srcs: string[], gl: WebGLRenderingContext, resManager: ResManager) {
+export function skybox(
+  srcs: string[],
+  gl: WebGLRenderingContext,
+  resManager: ResManager
+) {
   const m = cube(50);
 
   const ret = new Transform();
@@ -120,25 +126,32 @@ export function skybox(srcs: string[], gl: WebGLRenderingContext, resManager: Re
   mesh.set_mat(mat);
   ret.add_mesh(mesh);
   return new RObject({
-    skybox: ret
+    skybox: ret,
   });
 }
 
-export function panel(s: number, gl: WebGLRenderingContext, shadowFlag, resManager: ResManager) {
+export function panel(
+  s: number,
+  gl: WebGLRenderingContext,
+  shadowFlag: boolean,
+  resManager: ResManager
+) {
   const m = [
     [-s, 0, -s, -s, 0, s, s, 0, s, s, 0, -s],
     [0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 1],
     [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-    [0, 1, 2, 0, 2, 3]
+    [0, 1, 2, 0, 2, 3],
   ];
 
   const ret = new Transform();
   const mesh = new Mesh();
   mesh.set_mesh([[att_p, m[0], 3], [att_c, m[1], 4], [att_n, m[2], 3], m[3]]);
-  const mat = shadowFlag ? new BasePhoneShadowMat(gl, resManager) : new BasePhoneMat(gl, resManager);
+  const mat = shadowFlag
+    ? new BasePhoneShadowMat(gl, resManager)
+    : new BasePhoneMat(gl, resManager);
   mesh.set_mat(mat);
   ret.add_mesh(mesh);
   return new RObject({
-    panel: ret
+    panel: ret,
   });
 }

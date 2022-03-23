@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ResManager } from "../../ResManager";
 import { Scenes } from "../../Scenes";
 import { AMaterial } from "../Material";
@@ -18,7 +19,11 @@ export class RefractMat extends AMaterial {
 
   draw() {
     super.draw();
-    this.setUniformV3f("cameraPos", this.scene.mainCamera.position, this.scene.GL);
+    this.setUniformV3f(
+      "cameraPos",
+      this.scene.mainCamera.position,
+      this.scene.GL
+    );
     this.setUniformM4f("mvpMatrix", this.scene.mainCamera.mvp, this.scene.GL);
     this.setUniformM4f("modelMatrix", this.transform.m, this.scene.GL);
     this.setUniformM3f("normalMatrix", this.transform.nm, this.scene.GL);

@@ -1,13 +1,12 @@
+import { Scenes } from "../Scenes";
 
-import {Scenes} from '../Scenes';
-
-import {Mesh} from './Mesh';
-import {Transform} from './Transform';
+import { Mesh } from "./Mesh";
+import { Transform } from "./Transform";
 
 export class RObject {
-  Tranforms: {[key: string]: Transform};
+  Tranforms: { [key: string]: Transform };
 
-  constructor(trans?: {[key: string]: Transform}) {
+  constructor(trans?: { [key: string]: Transform }) {
     this.Tranforms = trans ? trans : {};
   }
 
@@ -43,13 +42,13 @@ export class RObject {
     }
   }
 
-
   setInfo(
-      scene: Scenes,
-      fun: (arg: Transform, arg2: WebGLRenderingContext) => void) {
+    scene: Scenes,
+    fun: (arg: Transform, arg2: WebGLRenderingContext) => void
+  ) {
     for (let key in this.Tranforms) {
       if (this.Tranforms[key] as Transform) {
-        fun(this.Tranforms[key], scene.GL);
+        fun(this.Tranforms[key], scene.GL!);
       }
     }
   }

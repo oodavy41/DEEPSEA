@@ -1,44 +1,47 @@
+// @ts-nocheck
+import { vec3 } from "gl-matrix";
 
-import {vec3} from 'gl-matrix';
-
-import {att_n, att_p, att_uv} from './GLOBAL/GLOBAL';
-import {AMaterial, MTL_TYPE} from './object/Material';
-import {ReflectMat} from './object/materials/ReflectMat';
-import {RefractMat} from './object/materials/RefractMat';
-import {TexPhoneMat} from './object/materials/TexPhoneMat';
-import {Mesh} from './object/Mesh';
-import {RObject} from './object/Object';
-import {Texture} from './object/Texture';
-import {Transform} from './object/Transform';
-import {ResManager} from './ResManager';
-
+import { att_n, att_p, att_uv } from "./GLOBAL/GLOBAL";
+import { AMaterial, MTL_TYPE } from "./object/Material";
+import { ReflectMat } from "./object/materials/ReflectMat";
+import { RefractMat } from "./object/materials/RefractMat";
+import { TexPhoneMat } from "./object/materials/TexPhoneMat";
+import { Mesh } from "./object/Mesh";
+import { RObject } from "./object/Object";
+import { Texture } from "./object/Texture";
+import { Transform } from "./object/Transform";
+import { ResManager } from "./ResManager";
 
 export function objLoader(
-    objpath: string, objname: string, mtllib: {[key: string]: AMaterial},
-    gl: WebGLRenderingContext, mtlflag: string, resManager: ResManager) {
-  let obj = '' + resManager.get(objpath + objname);
-
+  objpath: string,
+  objname: string,
+  mtllib: { [key: string]: AMaterial },
+  gl: WebGLRenderingContext,
+  mtlflag: string,
+  resManager: ResManager
+) {
+  let obj = "" + resManager.get(objpath + objname);
 
   const regexp = {
     // v float float float
     vertex_pattern:
-        /^v\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)/,
+      /^v\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)/,
     // vn float float float
     normal_pattern:
-        /^vn\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)/,
+      /^vn\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)/,
     // vt float float
     uv_pattern: /^vt\s+([\d|\.|\+|\-|e|E]+)\s+([\d|\.|\+|\-|e|E]+)/,
     // f vertex vertex vertex
     face_vertex: /^f\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)(?:\s+(-?\d+))?/,
     // f vertex/uv vertex/uv vertex/uv
     face_vertex_uv:
-        /^f\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+))?/,
+      /^f\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+))?/,
     // f vertex/uv/normal vertex/uv/normal vertex/uv/normal
     face_vertex_uv_normal:
-        /^f\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+)\/(-?\d+))?/,
+      /^f\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)\s+(-?\d+)\/(-?\d+)\/(-?\d+)(?:\s+(-?\d+)\/(-?\d+)\/(-?\d+))?/,
     // f vertex//normal vertex//normal vertex//normal
     face_vertex_normal:
-        /^f\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)(?:\s+(-?\d+)\/\/(-?\d+))?/,
+      /^f\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)\s+(-?\d+)\/\/(-?\d+)(?:\s+(-?\d+)\/\/(-?\d+))?/,
     // o object_name | g group_name
     object_pattern: /^[og]\s*(.+)?/,
     // s boolean
@@ -46,31 +49,38 @@ export function objLoader(
     // mtllib file_reference
     material_library_pattern: /^mtllib /,
     // usemtl material_name
-    material_use_pattern: /^usemtl /
+    material_use_pattern: /^usemtl /,
   };
 
   let retObjs = new RObject();
 
-  let state;
+  let state: {
+    vertices: number[];
+    uvs: number[];
+    normals: number[];
+    indexs: number[];
+    size: number;
+  };
   let name;
-  let vertices = [];
-  let normals = [];
-  let uvs = [];
+  let vertices: number[] = [];
+  let normals: number[] = [];
+  let uvs: number[] = [];
   let temphash = {};
 
-
-  if (obj.indexOf('\r\n') !== -1) {
+  if (obj.indexOf("\r\n") !== -1) {
     // This is faster than String.split with regex that splits on both
-    obj = obj.replace(/\r\n/g, '\n');
+    obj = obj.replace(/\r\n/g, "\n");
   }
 
-  if (obj.indexOf('\\\n') !== -1) {
+  if (obj.indexOf("\\\n") !== -1) {
     // join lines separated by a line continuation character (\)
-    obj = obj.replace(/\\\n/g, '');
+    obj = obj.replace(/\\\n/g, "");
   }
 
-  const lines = obj.split('\n');
-  let line = '', lineFirstChar = '', lineSecondChar = '';
+  const lines = obj.split("\n");
+  let line = "",
+    lineFirstChar = "",
+    lineSecondChar = "";
   let lineLength = 0;
   let result = [];
 
@@ -81,7 +91,7 @@ export function objLoader(
     let s;
     switch (f) {
       case 0:
-        s = v + '/' + u + '/' + n;
+        s = v + "/" + u + "/" + n;
         if (!temphash[s]) {
           state.vertices.push(vertices[v], vertices[v + 1], vertices[v + 2]);
           state.uvs.push(uvs[u], uvs[u + 1]);
@@ -93,7 +103,7 @@ export function objLoader(
         }
         break;
       case 1:
-        s = v + '/' + u;
+        s = v + "/" + u;
         if (!temphash[s]) {
           state.vertices.push(vertices[v], vertices[v + 1], vertices[v + 2]);
           state.uvs.push(uvs[u], uvs[u + 1]);
@@ -104,8 +114,7 @@ export function objLoader(
         }
         break;
       case 2:
-        s = v + '/' +
-            '/' + n;
+        s = v + "/" + "/" + n;
         if (!temphash[s]) {
           state.vertices.push(vertices[v], vertices[v + 1], vertices[v + 2]);
           state.normals.push(normals[n], normals[n + 1], normals[n + 2]);
@@ -142,45 +151,49 @@ export function objLoader(
     lineFirstChar = line.charAt(0);
 
     // @todo invoke passed in handler if any
-    if (lineFirstChar === '#') {
+    if (lineFirstChar === "#") {
       continue;
     }
 
-    if (lineFirstChar === 'v') {
+    if (lineFirstChar === "v") {
       lineSecondChar = line.charAt(1);
 
-      if (lineSecondChar === ' ' &&
-          (result = regexp.vertex_pattern.exec(line)) !== null) {
+      if (
+        lineSecondChar === " " &&
+        (result = regexp.vertex_pattern.exec(line)) !== null
+      ) {
         // 0                  1      2      3
         // ["v 1.0 2.0 3.0", "1.0", "2.0", "3.0"]
 
         vertices.push(
-            parseFloat(result[1]), parseFloat(result[2]),
-            parseFloat(result[3]));
-
+          parseFloat(result[1]),
+          parseFloat(result[2]),
+          parseFloat(result[3])
+        );
       } else if (
-          lineSecondChar === 'n' &&
-          (result = regexp.normal_pattern.exec(line)) !== null) {
+        lineSecondChar === "n" &&
+        (result = regexp.normal_pattern.exec(line)) !== null
+      ) {
         // 0                   1      2      3
         // ["vn 1.0 2.0 3.0", "1.0", "2.0", "3.0"]
 
         normals.push(
-            parseFloat(result[1]), parseFloat(result[2]),
-            parseFloat(result[3]));
-
+          parseFloat(result[1]),
+          parseFloat(result[2]),
+          parseFloat(result[3])
+        );
       } else if (
-          lineSecondChar === 't' &&
-          (result = regexp.uv_pattern.exec(line)) !== null) {
+        lineSecondChar === "t" &&
+        (result = regexp.uv_pattern.exec(line)) !== null
+      ) {
         // 0               1      2
         // ["vt 0.1 0.2", "0.1", "0.2"]
 
         uvs.push(parseFloat(result[1]), parseFloat(result[2]));
-
       } else {
-        throw new Error('Unexpected vertex/normal/uv line: \'' + line + '\'');
+        throw new Error("Unexpected vertex/normal/uv line: '" + line + "'");
       }
-
-    } else if (lineFirstChar === 'f') {
+    } else if (lineFirstChar === "f") {
       if ((result = regexp.face_vertex_uv_normal.exec(line)) !== null) {
         // f vertex/uv/normal vertex/uv/normal vertex/uv/normal
         // 0                        1    2    3    4    5    6    7    8    9 10
@@ -198,8 +211,6 @@ export function objLoader(
         e.forEach((element) => {
           addFace(0, result[element], result[element + 1], result[element + 2]);
         });
-
-
       } else if ((result = regexp.face_vertex_uv.exec(line)) !== null) {
         // f vertex/uv vertex/uv vertex/uv
         // 0                  1    2    3    4    5    6   7          8
@@ -212,11 +223,9 @@ export function objLoader(
           e = [1, 3, 5, 1, 5, 7];
         }
 
-        e.forEach(function(element) {
+        e.forEach(function (element) {
           addFace(1, result[element], result[element + 1], undefined);
         });
-
-
       } else if ((result = regexp.face_vertex_normal.exec(line)) !== null) {
         // f vertex//normal vertex//normal vertex//normal
         // 0                     1    2    3    4    5    6   7          8
@@ -230,11 +239,9 @@ export function objLoader(
           e = [1, 3, 5, 1, 5, 7];
         }
 
-        e.forEach(function(element) {
+        e.forEach(function (element) {
           addFace(2, result[element], undefined, result[element + 1]);
         });
-
-
       } else if ((result = regexp.face_vertex.exec(line)) !== null) {
         // f vertex vertex vertex
         // 0            1    2    3   4
@@ -247,16 +254,13 @@ export function objLoader(
           e = [1, 2, 3, 1, 3, 4];
         }
 
-        e.forEach(function(element) {
+        e.forEach(function (element) {
           addFace(3, result[element], undefined, undefined);
         });
-
-
       } else {
-        throw new Error('Unexpected face line: \'' + line + '\'');
+        throw new Error("Unexpected face line: '" + line + "'");
       }
-
-    } else if (lineFirstChar === 'l') {
+    } else if (lineFirstChar === "l") {
       /*let lineParts = line.substring(1).trim().split(" ");
        let lineVertices = [],
        lineUVs = [];
@@ -278,7 +282,6 @@ export function objLoader(
 
        }
        state.addLineGeometry(lineVertices, lineUVs);*/
-
     } else if ((result = regexp.object_pattern.exec(line)) !== null) {
       // o object_name
       // or
@@ -287,29 +290,34 @@ export function objLoader(
       // WORKAROUND: https://bugs.chromium.org/p/v8/issues/detail?id=2869
       // let name = result[ 0 ].substr( 1 ).trim();
 
-
-      if (result[0].substr(1).trim() === 'default') {
+      if (result[0].substr(1).trim() === "default") {
         continue;
       }
 
       if (state && name) {
         let m = state.mesh;
         m.set_mesh([
-          [att_p, state.vertices, 3], [att_uv, state.uvs, 2],
-          [att_n, state.normals, 3], state.indexs
+          [att_p, state.vertices, 3],
+          [att_uv, state.uvs, 2],
+          [att_n, state.normals, 3],
+          state.indexs,
         ]);
         retObjs.addmesh(name, m);
       }
 
-
-      state =
-          {mesh: null, vertices: [], normals: [], uvs: [], indexs: [], size: 0};
+      state = {
+        mesh: null,
+        vertices: [],
+        normals: [],
+        uvs: [],
+        indexs: [],
+        size: 0,
+      };
       temphash = {};
 
       name = result[0].substr(1).trim();
 
       retObjs.newT(name);
-
     } else if (regexp.material_use_pattern.test(line)) {
       // material
 
@@ -320,33 +328,41 @@ export function objLoader(
       if (state && state.mesh) {
         let m = state.mesh;
         m.set_mesh([
-          [att_p, state.vertices, 3], [att_uv, state.uvs, 2],
-          [att_n, state.normals, 3], state.indexs
+          [att_p, state.vertices, 3],
+          [att_uv, state.uvs, 2],
+          [att_n, state.normals, 3],
+          state.indexs,
         ]);
         retObjs.addmesh(name, m);
       }
-      state =
-          {mesh: null, vertices: [], normals: [], uvs: [], indexs: [], size: 0};
+      state = {
+        mesh: null,
+        vertices: [],
+        normals: [],
+        uvs: [],
+        indexs: [],
+        size: 0,
+      };
 
       temphash = {};
 
-
       state.mesh = new Mesh();
       if (!mtllib[matname]) {
-        console.log('no such mtl:' + matname);
+        console.log("no such mtl:" + matname);
       }
       state.mesh.set_mat(mtllib[matname]);
-
-
     } else if (regexp.material_library_pattern.test(line)) {
       // mtl file
       mtlLoader(
-          objpath, line.substring(7).trim(), mtllib, gl, mtlflag, resManager);
-
-
+        objpath,
+        line.substring(7).trim(),
+        mtllib,
+        gl,
+        mtlflag,
+        resManager
+      );
     } else if ((result = regexp.smoothing_pattern.exec(line)) !== null) {
       // smooth shading
-
       // @todo Handle files that have varying smooth values for a set of faces
       // inside one geometry, but does not define a usemtl for each face set.
       // This should be detected and a dummy material created (later
@@ -354,7 +370,6 @@ export function objLoader(
       // create extra material on each smooth value for "normal" obj files.
       // where explicit usemtl defines geometry groups.
       // Example asset: examples/models/obj/cerberus/Cerberus.obj
-
       /*let value = result[1].trim().toLowerCase();
        state.object.smooth = (value === '1' || value === 'on');
 
@@ -364,98 +379,109 @@ export function objLoader(
        material.smooth = state.object.smooth;
 
        }*/
-
     } else {
       // Handle null terminated files without exception
-      if (line === '\0') {
+      if (line === "\0") {
         continue;
       }
 
-      throw new Error('Unexpected line: \'' + line + '\'');
+      throw new Error("Unexpected line: '" + line + "'");
     }
   }
 
   // end of file do
   let mesh = state.mesh;
   mesh.set_mesh([
-    [att_p, state.vertices, 3], [att_uv, state.uvs, 2],
-    [att_n, state.normals, 3], state.indexs
+    [att_p, state.vertices, 3],
+    [att_uv, state.uvs, 2],
+    [att_n, state.normals, 3],
+    state.indexs,
   ]);
   retObjs.addmesh(name, mesh);
-
 
   return retObjs;
 }
 
 function mtlLoader(
-    path: string, mtlname: string, mtllib: {[key: string]: AMaterial},
-    gl: WebGLRenderingContext, mtlflag: string, resManager: ResManager) {
+  path: string,
+  mtlname: string,
+  mtllib: { [key: string]: AMaterial },
+  gl: WebGLRenderingContext,
+  mtlflag: string,
+  resManager: ResManager
+) {
   let thismtl;
   let mtlhash = {
-    'text_phone': () => {
+    text_phone: () => {
       return new TexPhoneMat(gl, resManager);
     },
-    'reflect_mat': () => {
+    reflect_mat: () => {
       return new ReflectMat(gl, resManager);
     },
-    'refract_mat': () => {
+    refract_mat: () => {
       return new RefractMat(gl, resManager);
-    }
+    },
   };
 
-  let mtl = '' + resManager.get(path + mtlname);
-  let lines = mtl.split('\n');
+  let mtl = "" + resManager.get(path + mtlname);
+  let lines = mtl.split("\n");
   let delimiter_pattern = /\s+/;
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
     line = line.trim();
 
-    if (line.length === 0 || line.charAt(0) === '#') {
+    if (line.length === 0 || line.charAt(0) === "#") {
       // Blank line or comment ignore
       continue;
     }
 
-    let pos = line.indexOf(' ');
+    let pos = line.indexOf(" ");
 
-    let key = (pos >= 0) ? line.substring(0, pos) : line;
+    let key = pos >= 0 ? line.substring(0, pos) : line;
     key = key.toLowerCase();
 
-    let value = (pos >= 0) ? line.substring(pos + 1) : '';
+    let value = pos >= 0 ? line.substring(pos + 1) : "";
     value = value.trim();
 
-    if (key === 'newmtl') {
+    if (key === "newmtl") {
       value += mtlflag;
       // New material
       if (mtllib[value]) {
-        console.log('same mtl name', value);
+        console.log("same mtl name", value);
       }
 
       thismtl = mtllib[value] = mtlhash[mtlflag]();
-      console.log('mtlload', value);
-
+      console.log("mtlload", value);
     } else if (thismtl) {
-      if (key === 'ka' || key === 'kd' || key === 'ks') {
+      if (key === "ka" || key === "kd" || key === "ks") {
         const ss = value.split(delimiter_pattern, 3);
         switch (key) {
-          case 'ka':
+          case "ka":
             thismtl.ambient = vec3.fromValues(
-                parseFloat(ss[0]), parseFloat(ss[1]), parseFloat(ss[2]));
+              parseFloat(ss[0]),
+              parseFloat(ss[1]),
+              parseFloat(ss[2])
+            );
             break;
-          case 'kd':
+          case "kd":
             thismtl.diffuse = vec3.fromValues(
-                parseFloat(ss[0]), parseFloat(ss[1]), parseFloat(ss[2]));
+              parseFloat(ss[0]),
+              parseFloat(ss[1]),
+              parseFloat(ss[2])
+            );
             break;
-          case 'ks':
+          case "ks":
             thismtl.specular = vec3.fromValues(
-                parseFloat(ss[0]), parseFloat(ss[1]), parseFloat(ss[2]));
+              parseFloat(ss[0]),
+              parseFloat(ss[1]),
+              parseFloat(ss[2])
+            );
             break;
         }
-
-      } else if (key === 'ns') {
+      } else if (key === "ns") {
         thismtl.powup = parseFloat(value);
-
-      } else if (key === 'map_kd') {
+      } else if (key === "map_kd") {
         const tex = new Texture(path + value, gl, resManager);
         thismtl.setTex(tex);
       }

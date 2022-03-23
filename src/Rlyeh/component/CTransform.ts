@@ -2,9 +2,9 @@ import * as glm from "gl-matrix";
 import { Transform } from "../object/Transform";
 
 export class CTransform {
-  parent: CTransform;
+  parent: CTransform | null;
 
-  private _m: glm.mat4;
+  private _m: glm.mat4 = glm.mat4.create();
   set m(value: glm.mat4) {
     this._m = value;
   }
@@ -14,7 +14,7 @@ export class CTransform {
     }
     return this._m;
   }
-  private _nm: glm.mat3;
+  private _nm: glm.mat3 = glm.mat3.create();
   set nm(value: glm.mat3) {
     this._nm = value;
   }
@@ -26,7 +26,7 @@ export class CTransform {
   }
 
   modifyFLAG: boolean;
-  protected _position: glm.vec3;
+  protected _position: glm.vec3 = glm.vec3.create();
   set position(value: glm.vec3) {
     this._position = value;
     this.modifyFLAG = true;
@@ -39,7 +39,7 @@ export class CTransform {
     y: number;
     z: number;
   };
-  protected _scale: glm.vec3;
+  protected _scale: glm.vec3 = glm.vec3.create();
   set scale(value: glm.vec3) {
     this._scale = value;
     this.modifyFLAG = true;
@@ -50,7 +50,7 @@ export class CTransform {
   earlyDarwFuncs: Array<(arg: Transform, arg2: WebGLRenderingContext) => void>;
   lateDarwFuncs: Array<(arg: Transform, arg2: WebGLRenderingContext) => void>;
 
-  constructor(parent: CTransform = null) {
+  constructor(parent: CTransform | null = null) {
     this.parent = parent;
     this.m = glm.mat4.create();
     this.nm = glm.mat3.create();
@@ -82,7 +82,12 @@ export class CTransform {
     glm.quat.rotateX(rot, rot, this.rotate.x);
     glm.quat.rotateY(rot, rot, this.rotate.y);
     glm.quat.rotateZ(rot, rot, this.rotate.z);
-    glm.mat4.fromRotationTranslationScale(this.m, rot, this.position, this.scale);
+    glm.mat4.fromRotationTranslationScale(
+      this.m,
+      rot,
+      this.position,
+      this.scale
+    );
     if (this.parent) {
       glm.mat4.mul(this.m, this.parent.m, this.m);
     }

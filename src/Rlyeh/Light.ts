@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { mat4, vec3, vec4 } from "gl-matrix";
 
 import { CTransform } from "./component/CTransform";
@@ -9,11 +10,21 @@ import { Scenes } from "./Scenes";
 export enum LIGHT_TYPE {
   POINT,
   SPOT,
-  DIRECTION
+  DIRECTION,
 }
 
 export class Light extends CTransform {
   type: LIGHT_TYPE;
+
+  private _position: vec3;
+  set position(pos: vec3) {
+    this._position = pos;
+    this.modifyFLAG = true;
+  }
+  get position() {
+    return this._position;
+  }
+
   private _lightAim: vec3;
   set lightAim(aim: vec3) {
     this.modifyFLAG = true;
@@ -48,7 +59,13 @@ export class Light extends CTransform {
   }
   depthFrame: FrameTexture;
 
-  constructor(type: LIGHT_TYPE, position: vec3, lightAim: vec3, lightCol: vec4, angel?: number) {
+  constructor(
+    type: LIGHT_TYPE,
+    position: vec3,
+    lightAim: vec3,
+    lightCol: vec4,
+    angel?: number
+  ) {
     super();
     if (type === LIGHT_TYPE.SPOT && angel === undefined) {
       console.error("define an spot light without angel!");
@@ -64,21 +81,25 @@ export class Light extends CTransform {
     let cameraInfo: number[];
     switch (this.type) {
       case LIGHT_TYPE.DIRECTION:
-        cameraInfo = [-30, 30, -30, 30, 1, 100];
+        cameraInfo = [-20, 20, -20, 20, 1, 100];
         break;
       case LIGHT_TYPE.POINT:
-        cameraInfo = [80, 1, 1, 100];
+        cameraInfo = [40, Math.PI / 2, 1, 100];
         break;
     }
     vec3.sub(this._lightDirection, this.lightAim, this.position);
     if (this.position && this.lightAim) {
-      this.lightMVP = makeMvp([this.position, this.lightAim, vec3.fromValues(0, 1, 0)], cameraInfo);
+      this.lightMVP = makeMvp(
+        [this.position, this.lightAim, vec3.fromValues(0, 1, 0)],
+        cameraInfo
+      );
     }
     super.make_transform();
   }
+
   enableShadow(scene: Scenes, width: number, height: number) {
     this.depthMat = new DepthMat(scene.GL, scene.resManager);
-    this.depthFrame = new FrameTexture(scene.GL, width, height);
+    this.depthFrame = new FrameTexture(scene.GL, width, height, true);
     this.makemvp();
   }
 
