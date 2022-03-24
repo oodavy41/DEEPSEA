@@ -1,4 +1,4 @@
-# R'lyeh [Sample Page](https://cocolate.cc/RLYEH/)
+# R'lyeh [Sample Page](https://oodavy41.github.io/RLYEH/)
 
 a render engine by webgl
 
